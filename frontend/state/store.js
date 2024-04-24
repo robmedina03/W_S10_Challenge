@@ -1,4 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
+import orderListReducer from '../components/orderListSlice'
+
+
 
 const exampleReducer = (state = { count: 0 }) => {
   return state
@@ -7,7 +10,7 @@ const exampleReducer = (state = { count: 0 }) => {
 export const resetStore = () => configureStore({
   reducer: {
     example: exampleReducer,
-    // add your reducer(s) here
+    orderList: orderListReducer
   },
   middleware: getDefault => getDefault().concat(
     // if using RTK Query for your networking: add your middleware here
