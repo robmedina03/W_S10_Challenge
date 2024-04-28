@@ -1,30 +1,36 @@
 import React, {useState} from 'react'
 import { useDispatch, useSelector} from 'react-redux'
-import { setLoading,addOrder, fetchOrdersAsync } from './orderListSlice';
+import { postOrder } from './pizzaApi'
+import { setLoading,fetchOrdersAsync, addOrder} from './orderListSlice';
 
 
 const initialFormState = { 
   fullName: '',
   size: '',
- toppings: []
-};
+  toppings: [],
+ 
+}
 
 export default function PizzaForm() {
-  const dispatch = useDispatch();
-  const loading = useSelector((state) => state.orderList.loading)
-  const [formData, setFormData] = useState(initialFormState);
-  const [error, setError] = useState('');
 
-const handleChange = (e) => {
-  const { name, value, type, checked} = e.target;
+  const dispatch = useDispatch();
+  const  loading = useSelector((state) => state.orderList.loading);
+  const [formData, setFormData] = useState(initialFormState)
+  const [ error, setError] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value, type, checked} = e.target;
    if( type === 'checkbox') {
     setFormData((prevFormData) => {
       let updatedToppings;
       if(checked) {
-        updatedToppings = [...prevFormData.toppings, value];
-      } else {
-        updatedToppings = prevFormData.toppings.filter((topping) => topping !== value);
-      }
+       
+        updatedToppings = [...prevFormData.toppings, name];
+      
+    } else {
+
+      updatedToppings= prevFormData.toppings.filter((topping) => topping !== name);
+    }
       return {...prevFormData, toppings: updatedToppings};
     });
   } else {
@@ -33,17 +39,43 @@ const handleChange = (e) => {
   }
 };
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    dispatch(setLoading(true));
-    setError('');
-  
 
-    try{
+  const handleSubmit = async (event) => {
+   event.preventDefault();
+      const { fullName, size,toppings} = formData;
 
-    const toppingsIds = formData.toppings
-    .filter(topping => ['Pepperoni', 'Greenpeppers', 'Pineapple', 'Mushrooms', 'Ham'].includes(topping))
-    .map(topping => {
+
+      if(!fullName.trim()) {
+        setError('fullName is required');
+        return 
+      }
+      
+      
+      if (fullName.length <3 ){
+        setError('fullName must be at least 3 characters')
+        return 
+      }
+      if (fullName.length > 20  ){
+        setError('fullName cannot exceed 20 characters')
+        return 
+      }
+      if (!['S','M', 'L'].includes(size)){
+        setError('size must be one of the following values: S, M, L')
+        return 
+      }
+     
+
+
+
+
+    dispatch(setLoading(true))
+    setError('')
+
+    try  {
+
+      const toppingsIds = toppings
+      .filter((topping) => ['Pepperoni', 'Greenpeppers', 'Pineapple', 'Mushrooms', 'Ham'].includes(topping))
+    .map((topping) => {
       switch (topping) {
         case 'Pepperoni':
           return 1;
@@ -59,50 +91,44 @@ const handleSubmit = async (e) => {
                   return null;
       } 
     });
-    
+
 
 
     const updateFormData = {fullName: formData.fullName,
     size: formData.size,
   toppings: toppingsIds};
-  
- 
-  
 
-    const response = await fetch('http://localhost:9009/api/pizza/order', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify(updateFormData)
-    });
-
-    if(!response.ok){
-      const responseData = await response.json();
-      throw new Error(responseData.message || 'Failed to submit order ');
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 250));
-    dispatch(addOrder({...updateFormData, id: Date.now()}));
-    dispatch(fetchOrdersAsync())
-      
-   dispatch(setLoading(false));
-   setFormData(initialFormState);
+      const response =  dispatch(postOrder(updateFormData))
+      if(response.error){
+        throw new Error(response.error.message || 'Failed to submit order')
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250))
+      dispatch(addOrder({...formData, id: Date.now()}))
+     dispatch(fetchOrdersAsync())
+  
    
+    setFormData(initialFormState)
+
   } catch (error) {
     setError(error.message || 'Failed to submit order');
-    dispatch(setLoading(false))
+    
+  }finally{
+  dispatch(setLoading(false))
   }
-   
+
 };
 
 
 
+  
+  
+    
+
   return (
-    <form onSubmit= { handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <h2>Pizza Form</h2>
       {loading && <div className='pending'>Order in progress...</div>}
-      {error && <div className='failure'>{error}</div>}
+      {error && <div className='failure'>Order failed:{error}</div>}
 
       <div className="input-group">
         <div>
@@ -122,7 +148,7 @@ const handleSubmit = async (e) => {
       <div className="input-group">
         <div>
           <label htmlFor="size">Size</label><br />
-          <select data-testid="sizeSelect" id="size" name="size" value= {formData.size} onChange={handleChange}>
+          <select data-testid="sizeSelect" id="size" name="size" value={formData.size} onChange={handleChange}>
             <option value="">----Choose size----</option>
             <option value="S">Small</option>
             <option value="M">Medium</option>
@@ -133,22 +159,22 @@ const handleSubmit = async (e) => {
 
       <div className="input-group">
         <label>
-          <input data-testid="checkPepperoni" name="toppings" value= 'Pepperoni' type="checkbox" checked= {formData.toppings.includes('Pepperoni')} onChange={handleChange}/>
+          <input data-testid="checkPepperoni" name="Pepperoni" type="checkbox" checked= {formData.toppings.includes('Pepperoni')}  onChange={handleChange}/>
           Pepperoni<br /></label>
         <label>
-          <input data-testid="checkGreenpeppers" name="toppings" value='Greenpeppers' type="checkbox" checked= {formData.toppings.includes('Greenpeppers')} onChange={handleChange} />
+          <input data-testid="checkGreenpeppers" name="Greenpeppers" type="checkbox" checked= {formData.toppings.includes('Greenpeppers')}  onChange={handleChange} />
           Green Peppers<br /></label>
         <label>
-          <input data-testid="checkPineapple" name="toppings" type="checkbox" value= 'Pineapple' checked= {formData.toppings.includes('Pineapple')} onChange={handleChange} />
+          <input data-testid="checkPineapple" name="Pineapple" type="checkbox" checked= {formData.toppings.includes('Pineapple')}  onChange={handleChange} />
           Pineapple<br /></label>
         <label>
-          <input data-testid="checkMushrooms" name="toppings" type="checkbox" value= 'Mushrooms' checked= {formData.toppings.includes('Mushrooms')} onChange={handleChange}/>
+          <input data-testid="checkMushrooms" name="Mushrooms" type="checkbox" checked= {formData.toppings.includes('Mushrooms')}  onChange={handleChange} />
           Mushrooms<br /></label>
         <label>
-          <input data-testid="checkHam" name="toppings" type="checkbox" value= 'Ham' checked= {formData.toppings.includes('Ham')} onChange={handleChange} />
+          <input data-testid="checkHam" name="Ham" type="checkbox" checked= {formData.toppings.includes('Ham')}  onChange={handleChange} />
           Ham<br /></label>
       </div>
-      <button data-testid="submit" type="submit" disabled= {loading}>Submit</button>
+      <input data-testid="submit" type="submit" />
     </form>
   )
 }

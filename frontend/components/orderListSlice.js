@@ -5,7 +5,8 @@ export const orderListSlice = createSlice({
     initialState: {
     loading: true,
     orders: [],
-    filter: 'All'
+    filter: 'All',
+    error:null
     },
 
     reducers: {
@@ -21,19 +22,21 @@ export const orderListSlice = createSlice({
 
         addOrder:(state, action) => {
             state.orders.push(action.payload);
-        }
+        },
+        setError: (state, action) => {
+            state.error = action.payload
+        },
 
     }
 
 });
 
-export const { setLoading, setOrders, setFilter, addOrder} = orderListSlice.actions;
+export const { setLoading, setOrders, setFilter, addOrder, setError} = orderListSlice.actions;
 
 export const fetchOrdersAsync = () => async (dispatch) =>{
-    dispatch(setLoading(true))
+    dispatch(setLoading(true));
 
-    
-        try {
+    try {
           const response = await fetch('http://localhost:9009/api/pizza/history');
           if(!response.ok) {
             throw new Error('Failed to fetch orders')
@@ -42,6 +45,7 @@ export const fetchOrdersAsync = () => async (dispatch) =>{
           dispatch(setOrders(orders));
         }catch (error) {
           console.error('Error fetching orders', error);
+          dispatch(setError(error.message));
         } finally {
             dispatch(setLoading(false));
         }

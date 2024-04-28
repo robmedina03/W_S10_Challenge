@@ -1,5 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import orderListReducer from '../components/orderListSlice'
+import { postOrder } from '../components/pizzaApi'
+
 
 
 
@@ -12,10 +14,11 @@ export const resetStore = () => configureStore({
     example: exampleReducer,
     orderList: orderListReducer
   },
-  middleware: getDefault => getDefault().concat(
+  middleware: getDefaultMiddleware => getDefaultMiddleware().concat()
+    
     // if using RTK Query for your networking: add your middleware here
     // if using Redux Thunk for your networking: you can ignore this
-  ),
+
 })
 
 export const store = resetStore()
