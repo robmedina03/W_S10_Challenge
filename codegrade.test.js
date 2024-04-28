@@ -9,7 +9,7 @@ import { resetStore } from './frontend/state/store'
 import App from './frontend/components/App'
 
 jest.setTimeout(1500)
-const waitForOptions = { timeout: 300 }
+const waitForOptions = { timeout: 250 }
 const queryOptions = { exact: false }
 
 beforeAll(() => { server.listen() })

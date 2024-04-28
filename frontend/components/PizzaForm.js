@@ -68,10 +68,11 @@ export default function PizzaForm() {
 
 
 
-    dispatch(setLoading(true))
-    setError('')
-
+   
     try  {
+      dispatch(setLoading(true))
+      setError('')
+  
 
       const toppingsIds = toppings
       .filter((topping) => ['Pepperoni', 'Greenpeppers', 'Pineapple', 'Mushrooms', 'Ham'].includes(topping))
@@ -98,11 +99,11 @@ export default function PizzaForm() {
     size: formData.size,
   toppings: toppingsIds};
 
-      const response =  dispatch(postOrder(updateFormData))
+      const response = await dispatch(postOrder(updateFormData))
       if(response.error){
         throw new Error(response.error.message || 'Failed to submit order')
       }
-      await new Promise((resolve) => setTimeout(resolve, 250))
+      await new Promise((resolve) => setTimeout(resolve, 200))
       dispatch(addOrder({...formData, id: Date.now()}))
      dispatch(fetchOrdersAsync())
   
