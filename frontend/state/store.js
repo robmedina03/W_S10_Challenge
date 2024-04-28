@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit'
 import orderListReducer from '../components/orderListSlice'
-import { postOrder } from '../components/pizzaApi'
+
 
 
 
